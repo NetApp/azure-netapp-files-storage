@@ -1,0 +1,391 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string",
+      "defaultValue": "linuxVM",
+      "metadata": {
+        "description": "Name of the virtual machine"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine"
+      }
+    },
+    "authenticationType": {
+      "type": "string",
+      "defaultValue": "password",
+      "allowedValues": [
+        "password",
+        "sshPublicKey"
+      ],
+      "metadata": {
+        "description": "Type of authentication to use on the Virtual Machine"
+      }
+    },
+    "adminPasswordOrKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password or SSH key for the Virtual Machine"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "Size of the virtual machine"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources"
+      }
+    },
+    "netAppAccountName": {
+      "type": "string",
+      "defaultValue": "netappaccount",
+      "metadata": {
+        "description": "Name of the NetApp account"
+      }
+    },
+    "netAppPoolName": {
+      "type": "string",
+      "defaultValue": "netapppool",
+      "metadata": {
+        "description": "Name of the NetApp pool"
+      }
+    },
+    "netAppPoolSizeInTB": {
+      "type": "int",
+      "defaultValue": 4,
+      "minValue": 4,
+      "maxValue": 500,
+      "metadata": {
+        "description": "Size of the NetApp pool in TB (minimum 4)"
+      }
+    },
+    "netAppVolumeName": {
+      "type": "string",
+      "defaultValue": "anf-vol1",
+      "metadata": {
+        "description": "Name of the NetApp volume"
+      }
+    },
+    "netAppVolumeSize": {
+      "type": "int",
+      "defaultValue": 100,
+      "metadata": {
+        "description": "Size of the NetApp volume in GB"
+      }
+    },
+    "netAppServiceLevel": {
+      "type": "string",
+      "allowedValues": [
+        "Standard",
+        "Premium",
+        "Ultra"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "Service level for the NetApp volume"
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "defaultValue": "vnet",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    },
+    "subnetNameVM": {
+      "type": "string",
+      "defaultValue": "vmSubnet",
+      "metadata": {
+        "description": "Name of the VM subnet"
+      }
+    },
+    "subnetNameNetApp": {
+      "type": "string",
+      "defaultValue": "netappSubnet",
+      "metadata": {
+        "description": "Name of the NetApp subnet (must be named 'netappSubnet')"
+      }
+    }
+  },
+  "variables": {
+    "networkInterfaceName": "[concat(parameters('vmName'), '-nic')]",
+    "publicIPAddressName": "[concat(parameters('vmName'), '-ip')]",
+    "nsgName": "[concat(parameters('vmName'), '-nsg')]",
+    "vnetAddressPrefix": "10.0.0.0/16",
+    "vmSubnetAddressPrefix": "10.0.0.0/24",
+    "netAppSubnetAddressPrefix": "10.0.1.0/24",
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+            "keyData": "[parameters('adminPasswordOrKey')]"
+          }
+        ]
+      }
+    },
+    "customScriptFileUri": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.netapp/anf-nfs-volume/support/nfs-installer.sh"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-05-01",
+      "name": "[parameters('vnetName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetNameVM')]",
+            "properties": {
+              "addressPrefix": "[variables('vmSubnetAddressPrefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnetNameNetApp')]",
+            "properties": {
+              "addressPrefix": "[variables('netAppSubnetAddressPrefix')]",
+              "delegations": [
+                {
+                  "name": "NetAppDelegation",
+                  "properties": {
+                    "serviceName": "Microsoft.NetApp/volumes"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('nsgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "sku": {
+        "name": "Basic"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('networkInterfaceName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetNameVM'))]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('netAppAccountName')]",
+      "location": "[parameters('location')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(parameters('netAppAccountName'), '/', parameters('netAppPoolName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('netAppAccountName'))]"
+      ],
+      "properties": {
+        "serviceLevel": "[parameters('netAppServiceLevel')]",
+        "size": "[mul(parameters('netAppPoolSizeInTB'), 1099511627776)]"
+      }
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(parameters('netAppAccountName'), '/', parameters('netAppPoolName'), '/', parameters('netAppVolumeName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('netAppAccountName'), parameters('netAppPoolName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ],
+      "properties": {
+        "serviceLevel": "[parameters('netAppServiceLevel')]",
+        "creationToken": "[parameters('netAppVolumeName')]",
+        "usageThreshold": "[mul(parameters('netAppVolumeSize'), 1073741824)]",
+        "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetNameNetApp'))]",
+        "protocolTypes": ["NFSv3"]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('vmName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPasswordOrKey')]",
+          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "waitForANFVolume",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))]"
+      ],
+      "kind": "AzureCLI",
+      "properties": {
+        "azCliVersion": "2.20.0",
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess",
+        "scriptContent": "#!/bin/bash\necho \"Waiting for NetApp volume to be fully provisioned...\"\nsleep 180\necho \"ANF volume provision wait complete\"\necho \"NetApp IP address is: $(az netapp volume show --resource-group $ResourceGroup --account-name ${netAppAccountName} --pool-name ${netAppPoolName} --volume-name ${netAppVolumeName} --query 'mountTargets[0].ipAddress' -o tsv)\"\n",
+        "environmentVariables": [
+          {
+            "name": "ResourceGroup",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "netAppAccountName",
+            "value": "[parameters('netAppAccountName')]"
+          },
+          {
+            "name": "netAppPoolName",
+            "value": "[parameters('netAppPoolName')]"
+          },
+          {
+            "name": "netAppVolumeName",
+            "value": "[parameters('netAppVolumeName')]"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2020-12-01",
+      "type": "Microsoft.Compute/virtualMachines/runCommands",
+      "name": "[concat(parameters('vmName'), '/mountANFVolume')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
+        "[resourceId('Microsoft.Resources/deploymentScripts', 'waitForANFVolume')]"
+      ],
+      "properties": {
+        "asyncExecution": false,
+        "timeoutInSeconds": 1200,
+        "runAsUser": "root",
+        "source": {
+          "script": "[concat('#!/bin/bash\n\nset -e\n\nexec > /var/log/anf-mount.log 2>&1\necho \"Starting ANF mount script at $(date)\"\n\n# Install NFS client\necho \"Installing NFS client...\"\napt-get update -q\napt-get install -y nfs-common\n\n# Set NetApp variables\nNETAPP_IP=\"', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))).mountTargets[0].ipAddress, '\"\nNETAPP_PATH=\"/', parameters('netAppVolumeName'), '\"\nMOUNT_PATH=\"/mnt/anf-vol1\"\n\necho \"NetApp IP: $NETAPP_IP\"\necho \"NetApp Path: $NETAPP_PATH\"\necho \"Mount Path: $MOUNT_PATH\"\n\n# Create mount directory\necho \"Creating mount directory...\"\nmkdir -p $MOUNT_PATH\nchmod 777 $MOUNT_PATH\n\n# Wait for NetApp endpoint to be reachable\necho \"Checking if NetApp endpoint is reachable...\"\nRETRIES=30\ncount=0\nwhile [ $count -lt $RETRIES ]; do\n    if ping -c 1 $NETAPP_IP &> /dev/null; then\n        echo \"NetApp endpoint is reachable\"\n        break\n    fi\n    \n    count=$((count+1))\n    echo \"Waiting for NetApp endpoint... Attempt $count of $RETRIES\"\n    sleep 10\ndone\n\nif [ $count -eq $RETRIES ]; then\n    echo \"ERROR: Could not reach NetApp endpoint after $RETRIES attempts\"\n    exit 1\nfi\n\n# Mount the volume\necho \"Mounting ANF volume...\"\nmount -t nfs -o rw,hard,rsize=262144,wsize=262144,vers=3,tcp $NETAPP_IP:$NETAPP_PATH $MOUNT_PATH\n\n# Check if mount was successful\nif mount | grep -q \"$MOUNT_PATH\"; then\n    echo \"Mount successful!\"\n    \n    # Add to fstab for persistence\n    echo \"Adding to fstab for persistence...\"\n    grep -v \"$MOUNT_PATH\" /etc/fstab > /etc/fstab.new\n    mv /etc/fstab.new /etc/fstab\n    echo \"$NETAPP_IP:$NETAPP_PATH $MOUNT_PATH nfs rw,hard,rsize=262144,wsize=262144,vers=3,tcp 0 0\" >> /etc/fstab\n    \n    # Create test file to confirm write access\n    echo \"Creating test file...\"\n    touch $MOUNT_PATH/mount-successful\n    \n    echo \"ANF volume successfully mounted at $MOUNT_PATH\"\n    exit 0\nelse\n    echo \"ERROR: Mount verification failed\"\n    exit 1\nfi')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "adminUsername": {
+      "type": "string",
+      "value": "[parameters('adminUsername')]"
+    },
+    "sshCommand": {
+      "type": "string",
+      "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(variables('publicIPAddressName')).dnsSettings.fqdn)]"
+    },
+    "netAppMountPath": {
+      "type": "string",
+      "value": "/mnt/anf-vol1"
+    },
+    "netAppVolumeIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))).mountTargets[0].ipAddress]"
+    }
+  }
+}
