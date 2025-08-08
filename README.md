@@ -160,7 +160,7 @@ Enterprise scenario including:
 ## Security Best Practices
 
 > [!WARNING]
-> Never commit secrets to this repository
+> Never commit secrets to the repository
 
 - Use Azure Key Vault for storing sensitive data
 - Keep environment-specific parameter files separate and secure
@@ -191,4 +191,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Maintained by:** Prabu Arjunan  
-**Last Updated:** 5/29/25
+**Last Updated:** 8/8/25
