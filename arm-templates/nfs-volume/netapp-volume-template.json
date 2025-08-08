@@ -1,0 +1,173 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "volumeName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the NetApp volume"
+      }
+    },
+    "volumeSizeGiB": {
+      "type": "int",
+      "defaultValue": 100,
+      "metadata": {
+        "description": "Size of the NetApp volume in GiB"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources"
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "defaultValue": "anf-vnet",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    },
+    "projectName": {
+      "type": "string",
+      "defaultValue": "dev",
+      "metadata": {
+        "description": "Project name for tagging and resource management"
+      }
+    },
+    "allowedClients": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "IP address range allowed to access the NFS volume (CIDR format)"
+      }
+    }
+  },
+  "variables": {
+    "netAppAccountName": "[concat('netapp-', uniqueString(resourceGroup().id))]",
+    "netAppPoolName": "pool1",
+    "netAppSubnetName": "netappSubnet",
+    "vnetAddressPrefix": "10.0.0.0/16",
+    "netAppSubnetPrefix": "10.0.1.0/24"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2021-05-01",
+      "name": "[parameters('vnetName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "purpose": "NetApp Files Infrastructure"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('netAppSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('netAppSubnetPrefix')]",
+              "delegations": [
+                {
+                  "name": "NetAppDelegation",
+                  "properties": {
+                    "serviceName": "Microsoft.NetApp/volumes"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts",
+      "apiVersion": "2021-06-01",
+      "name": "[variables('netAppAccountName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "createdBy": "ANF-Template",
+        "createdOn": "[utcNow('yyyy-MM-dd')]"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
+      "apiVersion": "2021-06-01",
+      "name": "[concat(variables('netAppAccountName'), '/', variables('netAppPoolName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.NetApp/netAppAccounts', variables('netAppAccountName'))]"
+      ],
+      "properties": {
+        "serviceLevel": "Standard",
+        "size": 4398046511104
+      }
+    },
+    {
+      "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+      "apiVersion": "2021-06-01",
+      "name": "[concat(variables('netAppAccountName'), '/', variables('netAppPoolName'), '/', parameters('volumeName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', variables('netAppAccountName'), variables('netAppPoolName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ],
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "volumeName": "[parameters('volumeName')]",
+        "createdBy": "ANF-Template",
+        "createdOn": "[utcNow('yyyy-MM-dd')]"
+      },
+      "properties": {
+        "serviceLevel": "Standard",
+        "creationToken": "[parameters('volumeName')]",
+        "usageThreshold": "[mul(parameters('volumeSizeGiB'), 1073741824)]",
+        "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('netAppSubnetName'))]",
+        "protocolTypes": ["NFSv3"],
+        "exportPolicy": {
+          "rules": [
+            {
+              "ruleIndex": 1,
+              "unixReadOnly": false,
+              "unixReadWrite": true,
+              "cifs": false,
+              "nfsv3": true,
+              "nfsv41": false,
+              "allowedClients": "[parameters('allowedClients')]",
+              "hasRootAccess": false
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "volumeId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', variables('netAppAccountName'), variables('netAppPoolName'), parameters('volumeName'))]"
+    },
+    "volumeIP": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', variables('netAppAccountName'), variables('netAppPoolName'), parameters('volumeName'))).mountTargets[0].ipAddress]"
+    },
+    "mountCommand": {
+      "type": "string",
+      "value": "[concat('mkdir -p /mnt/', parameters('volumeName'), ' && mount -t nfs -o vers=3 ', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', variables('netAppAccountName'), variables('netAppPoolName'), parameters('volumeName'))).mountTargets[0].ipAddress, ':/', parameters('volumeName'), ' /mnt/', parameters('volumeName'))]"
+    },
+    "fstabEntry": {
+      "type": "string",
+      "value": "[concat(reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', variables('netAppAccountName'), variables('netAppPoolName'), parameters('volumeName'))).mountTargets[0].ipAddress, ':/', parameters('volumeName'), ' /mnt/', parameters('volumeName'), ' nfs rw,hard,rsize=65536,wsize=65536,vers=3,tcp 0 0')]"
+    },
+    "mountInstructions": {
+      "type": "string",
+      "value": "[concat('Mount command: mount -t nfs -o vers=3 ', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', variables('netAppAccountName'), variables('netAppPoolName'), parameters('volumeName'))).mountTargets[0].ipAddress, ':/', parameters('volumeName'), ' /your/mount/path')]"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - nfs-common
+
+runcmd:
+  # Create mount point
+  - mkdir -p /mnt/${volume_name}
+  
+  # Mount the NFS volume
+  - mount -t nfs -o vers=3 ${volume_ip}:/${volume_name} /mnt/${volume_name}
+  
+  # Add to fstab for persistent mounting
+  - echo "${volume_ip}:/${volume_name} /mnt/${volume_name} nfs rw,hard,rsize=65536,wsize=65536,vers=3,tcp 0 0" >> /etc/fstab
+  
+  # Create a test file to verify the mount
+  - echo "NFS volume mounted successfully at $(date)" > /mnt/${volume_name}/mount-test.txt
+  
+  # Set permissions
+  - chmod 755 /mnt/${volume_name}
+
+final_message: "NFS volume has been mounted successfully" 
