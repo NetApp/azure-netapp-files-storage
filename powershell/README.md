@@ -65,11 +65,11 @@ This directory contains PowerShell scripts for deploying Azure NetApp Files solu
    .\deploy-nfs-volume.ps1 -ResourceGroupName "rg-myproject-anf" -VolumeName "my-nfs-volume"
    
    # For Linux VM with NFS
-   $password = ConvertTo-SecureString "MySecurePassword123!" -AsPlainText -Force
+   $password = ConvertTo-SecureString "your-secure-password-here" -AsPlainText -Force
    .\deploy-linux-vm-with-nfs.ps1 -ResourceGroupName "rg-myproject-vm" -AdminUsername "azureuser" -AdminPassword $password
    
    # For Multi-Linux VMs
-   $password = ConvertTo-SecureString "MySecurePassword123!" -AsPlainText -Force
+   $password = ConvertTo-SecureString "your-secure-password-here" -AsPlainText -Force
    .\deploy-multi-linux-vms-with-nfs.ps1 -ResourceGroupName "rg-mycluster" -AdminUsername "azureuser" -AdminPassword $password -VmCount 3
    ```
 
@@ -132,7 +132,7 @@ Each script provides relevant outputs:
 ### Using Parameters
 ```powershell
 # Example for multi-VM script
-$password = ConvertTo-SecureString "MySecurePassword123!" -AsPlainText -Force
+$password = ConvertTo-SecureString "your-secure-password-here" -AsPlainText -Force
 .\deploy-multi-linux-vms-with-nfs.ps1 `
     -ResourceGroupName "rg-prod-cluster" `
     -AdminUsername "admin" `

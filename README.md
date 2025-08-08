@@ -130,6 +130,8 @@ Enterprise scenario including:
 - Implement proper network security groups and subnet delegation
 - Use managed identities and RBAC for access control
 - Enable encryption in transit and at rest
+- Use environment variables for passwords (e.g., `ADMIN_PASSWORD`)
+- Replace placeholder passwords with secure values before deployment
 
 
 ## Documentation

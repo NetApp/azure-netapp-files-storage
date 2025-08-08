@@ -47,11 +47,11 @@
     Project name for tagging and resource management
 
 .EXAMPLE
-    $password = ConvertTo-SecureString "MySecurePassword123!" -AsPlainText -Force
+    $password = ConvertTo-SecureString "your-secure-password-here" -AsPlainText -Force
     .\deploy-linux-vm-with-nfs.ps1 -ResourceGroupName "rg-myproject-vm" -AdminUsername "azureuser" -AdminPassword $password
 
 .EXAMPLE
-    $password = ConvertTo-SecureString "MySecurePassword123!" -AsPlainText -Force
+    $password = ConvertTo-SecureString "your-secure-password-here" -AsPlainText -Force
     .\deploy-linux-vm-with-nfs.ps1 -ResourceGroupName "rg-prod-vm" -VmName "prod-linux-vm" -AdminUsername "admin" -AdminPassword $password -NetAppVolumeSize 500 -Location "West US 2"
 #>
 

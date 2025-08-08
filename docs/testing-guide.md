@@ -173,7 +173,7 @@ cd terraform/linux-vm-with-nfs/
 terraform init
 terraform apply \
   -var="admin_username=testuser" \
-  -var="admin_password=TestPassword123!" \
+  -var="admin_password=\${ADMIN_PASSWORD:-testpassword}" \
   -auto-approve
 ```
 
@@ -243,7 +243,7 @@ cd terraform/multi-linux-vms-with-nfs/
 terraform init
 terraform apply \
   -var="admin_username=testuser" \
-  -var="admin_password=TestPassword123!" \
+  -var="admin_password=\${ADMIN_PASSWORD:-testpassword}" \
   -var="vm_count=3" \
   -auto-approve
 ```
@@ -291,7 +291,7 @@ ssh testuser@<load-balancer-ip>
 # Test with different VM counts
 terraform apply \
   -var="admin_username=testuser" \
-  -var="admin_password=TestPassword123!" \
+  -var="admin_password=\${ADMIN_PASSWORD:-testpassword}" \
   -var="vm_count=5" \
   -auto-approve
 ```
