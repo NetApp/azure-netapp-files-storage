@@ -76,7 +76,18 @@ azure-netapp-files-storage/
 3. **Add the JSON output as a GitHub secret named `AZURE_CREDENTIALS`**
 4. **Go to Actions tab and run the "Deploy ANF & VM Infrastructure" workflow**
 
-### Option 2: Manual Deployment
+### Option 2: Deploy to Azure
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNetApp%2Fazure-netapp-files-storage%2Fmain%2Farm-templates%2Flinux-vm-with-nfs%2Flinux-vm-anf-nfs-template.json?target=_blank" target="_blank">
+<img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
+</a>
+
+1. **Click the button above**
+2. **Sign in with your Azure credentials**
+3. **Fill in the parameters**
+4. **Click "Review + Create"**
+
+### Option 3: Manual Deployment
 
 1. **Clone this repository:**
    ```bash
