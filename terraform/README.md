@@ -63,7 +63,7 @@ This directory contains Terraform templates for deploying Azure NetApp Files sol
    ```bash
    # For VM templates, set authentication
    export TF_VAR_admin_username="azureuser"
-   export TF_VAR_admin_password="YourSecurePassword123!"
+   export TF_VAR_admin_password="your-secure-password-here"
    ```
 
 5. **Deploy:**
@@ -134,7 +134,7 @@ Create a `terraform.tfvars` file in any template directory:
 ```hcl
 # Example for multi-VM template
 admin_username = "myuser"
-admin_password = "MySecurePassword123!"
+admin_password = "your-secure-password-here"
 vm_count = 5
 vm_size = "Standard_D4s_v3"
 location = "westus2"

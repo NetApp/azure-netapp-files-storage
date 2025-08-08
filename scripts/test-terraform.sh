@@ -102,7 +102,7 @@ test_linux_vm_with_nfs() {
     # Plan (without applying to avoid costs)
     if terraform plan \
         -var="admin_username=testuser" \
-        -var="admin_password=TestPassword123!" \
+        -var="admin_password=\${ADMIN_PASSWORD:-testpassword}" \
         -input=false; then
         print_success "Linux VM with NFS template plan successful"
     else
@@ -133,7 +133,7 @@ test_multi_linux_vms_with_nfs() {
     # Plan (without applying to avoid costs)
     if terraform plan \
         -var="admin_username=testuser" \
-        -var="admin_password=TestPassword123!" \
+        -var="admin_password=\${ADMIN_PASSWORD:-testpassword}" \
         -var="vm_count=2" \
         -input=false; then
         print_success "Multi-Linux VMs with NFS template plan successful"

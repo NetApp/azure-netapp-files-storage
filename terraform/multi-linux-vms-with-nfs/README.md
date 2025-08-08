@@ -30,7 +30,7 @@ This Terraform template deploys an enterprise solution with:
    ```bash
    # For password authentication
    export TF_VAR_admin_username="azureuser"
-   export TF_VAR_admin_password="YourSecurePassword123!"
+   export TF_VAR_admin_password="your-secure-password-here"
    
    # OR for SSH key authentication
    export TF_VAR_admin_username="azureuser"
@@ -74,7 +74,7 @@ Create a `terraform.tfvars` file for customization:
 
 ```hcl
 admin_username = "myuser"
-admin_password = "MySecurePassword123!"  # Required - no default for security
+admin_password = "your-secure-password-here"  # Required - no default for security
 vm_name_prefix = "mycluster"
 vm_count = 5
 vm_size = "Standard_D4s_v3"
