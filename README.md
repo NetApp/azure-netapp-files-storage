@@ -63,28 +63,38 @@ azure-netapp-files-storage/
 - PowerShell 7.0+ (cross-platform)
 - Az PowerShell module 8.0+
 
-## Getting Started
+## Deployment Options
+
+### Option 1: Deploy with GitHub Actions (Recommended)
+[![Deploy with GitHub Actions](https://img.shields.io/badge/Deploy%20with-GitHub%20Actions-2ea44f)](../../actions/workflows/deploy.yml)
+
+1. **Fork/Clone this repository**
+2. **Set up Azure service principal credentials:**
+   ```bash
+   az ad sp create-for-rbac --name "GitHubActions" --role Contributor --scope /subscriptions/YOUR-SUBSCRIPTION-ID --sdk-auth
+   ```
+3. **Add the JSON output as a GitHub secret named `AZURE_CREDENTIALS`**
+4. **Go to Actions tab and run the "Deploy ANF & VM Infrastructure" workflow**
+
+### Option 2: Manual Deployment
 
 1. **Clone this repository:**
-
-```bash
-git clone https://github.com/NetApp/azure-netapp-files-storage.git
-cd azure-netapp-files-storage
-```
+   ```bash
+   git clone https://github.com/NetApp/azure-netapp-files-storage.git
+   cd azure-netapp-files-storage
+   ```
 
 2. **Choose your preferred tool:**
-
-```bash
-cd arm-templates/     # for ARM Templates
-cd terraform/        # for Terraform
-cd powershell/       # for PowerShell
-```
+   ```bash
+   cd arm-templates/     # for ARM Templates
+   cd terraform/        # for Terraform
+   cd powershell/       # for PowerShell
+   ```
 
 3. **Start with the basic NFS volume:**
-
-```bash
-cd nfs-volume/
-```
+   ```bash
+   cd nfs-volume/
+   ```
 
 4. **Follow the README** in each template folder for specific deployment instructions.
 
