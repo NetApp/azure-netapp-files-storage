@@ -1,0 +1,49 @@
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: 'Resource Group'
+        required: true
+      vmName:
+        description: 'VM Name'
+        required: true
+      adminUsername:
+        description: 'Admin Username'
+        required: true
+      adminPassword:
+        type: password
+        description: 'Admin Password'
+        required: true
+
+jobs:
+  deploy-application:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Get VM IP
+        id: get-vm-ip
+        run: |
+          VM_IP=$(az vm show -d -g ${{ github.event.inputs.resourceGroup }} -n ${{ github.event.inputs.vmName }} --query publicIps -o tsv)
+          echo "VM_IP=$VM_IP" >> $GITHUB_OUTPUT
+          
+      - name: Deploy application to VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.get-vm-ip.outputs.VM_IP }}
+          username: ${{ github.event.inputs.adminUsername }}
+          password: ${{ github.event.inputs.adminPassword }}
+          script: |
+            # Your application deployment commands here
+            mkdir -p /mnt/anf-vol1/app
+            echo "Deployed via GitHub Actions" > /mnt/anf-vol1/app/deployed.txt
+            echo "Application deployed at $(date)" > /mnt/anf-vol1/app/deployed.txt
+            echo "NetApp volume mounted successfully" >> /mnt/anf-vol1/app/deployed.txt

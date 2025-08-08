@@ -1,0 +1,63 @@
+name: Deploy ANF & VM Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: 'Resource Group'
+        required: true
+      location:
+        description: 'Azure Region'
+        default: 'eastus'
+        required: true
+      adminUsername:
+        description: 'Admin Username'
+        required: true
+      adminPassword:
+        type: password
+        description: 'Admin Password'
+        required: true
+      vmName:
+        description: 'VM Name'
+        default: 'linuxVM'
+        required: false
+      templateType:
+        description: 'Template Type'
+        default: 'linux-vm-with-nfs'
+        required: false
+        type: choice
+        options:
+          - linux-vm-with-nfs
+          - multi-linux-vms-with-nfs
+          - nfs-volume
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Deploy ARM Template
+        id: deployment
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ github.event.inputs.resourceGroup }}
+          template: ./arm-templates/${{ github.event.inputs.templateType }}/${{ github.event.inputs.templateType }}-template.json
+          parameters: >
+            vmName=${{ github.event.inputs.vmName }}
+            location=${{ github.event.inputs.location }}
+            adminUsername=${{ github.event.inputs.adminUsername }}
+            adminPasswordOrKey=${{ github.event.inputs.adminPassword }}
+
+      - name: Trigger Application Deployment
+        if: success() && github.event.inputs.templateType == 'linux-vm-with-nfs'
+        run: |
+          gh workflow run deploy-app.yml -f resourceGroup="${{ github.event.inputs.resourceGroup }}" -f vmName="${{ github.event.inputs.vmName || 'linuxVM' }}" -f adminUsername="${{ github.event.inputs.adminUsername }}" -f adminPassword="${{ github.event.inputs.adminPassword }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
