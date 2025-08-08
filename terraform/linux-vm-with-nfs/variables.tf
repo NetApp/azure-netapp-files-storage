@@ -26,7 +26,6 @@ variable "admin_password" {
   description = "Password for the Virtual Machine"
   type        = string
   sensitive   = true
-  default     = null
 }
 
 variable "ssh_public_key" {

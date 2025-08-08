@@ -54,7 +54,7 @@ This Terraform template deploys an enterprise solution with:
 |----------|-------------|---------|----------|
 | `admin_username` | Username for all VMs | `azureuser` | Yes |
 | `authentication_type` | Authentication type | `password` | No |
-| `admin_password` | Password for all VMs | `null` | Yes* |
+| `admin_password` | Password for all VMs | `null` | Yes |
 | `ssh_public_key` | SSH public key | `null` | Yes* |
 | `vm_name_prefix` | VM name prefix | `azlinuxvms` | No |
 | `vm_count` | Number of VMs (1-10) | `3` | No |
@@ -66,7 +66,7 @@ This Terraform template deploys an enterprise solution with:
 | `netapp_service_level` | Service level | `Standard` | No |
 | `project_name` | Project name | `dev` | No |
 
-*Required based on authentication type
+*Required when authentication_type is "password"
 
 ## Customization
 
@@ -74,7 +74,7 @@ Create a `terraform.tfvars` file for customization:
 
 ```hcl
 admin_username = "myuser"
-admin_password = "MySecurePassword123!"
+admin_password = "MySecurePassword123!"  # Required - no default for security
 vm_name_prefix = "mycluster"
 vm_count = 5
 vm_size = "Standard_D4s_v3"

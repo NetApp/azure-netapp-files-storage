@@ -54,7 +54,7 @@ This Terraform template deploys a complete solution with:
 |----------|-------------|---------|----------|
 | `admin_username` | Username for the VM | `azureuser` | Yes |
 | `authentication_type` | Authentication type | `password` | No |
-| `admin_password` | Password for the VM | `null` | Yes* |
+| `admin_password` | Password for the VM | `null` | Yes |
 | `ssh_public_key` | SSH public key | `null` | Yes* |
 | `vm_name` | Name of the VM | `linuxVM` | No |
 | `vm_size` | VM size | `Standard_D2s_v3` | No |
@@ -64,7 +64,7 @@ This Terraform template deploys a complete solution with:
 | `netapp_service_level` | Service level | `Standard` | No |
 | `project_name` | Project name | `dev` | No |
 
-*Required based on authentication type
+*Required when authentication_type is "password"
 
 ## Customization
 
@@ -72,7 +72,7 @@ Create a `terraform.tfvars` file for customization:
 
 ```hcl
 admin_username = "myuser"
-admin_password = "MySecurePassword123!"
+admin_password = "MySecurePassword123!"  # Required - no default for security
 vm_name = "my-linux-vm"
 vm_size = "Standard_D4s_v3"
 location = "westus2"

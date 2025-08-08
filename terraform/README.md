@@ -103,6 +103,7 @@ All templates support these common variables:
 
 ### Authentication
 - Support for both password and SSH key authentication
+- **Required password input** (no hardcoded defaults for security)
 - Secure password handling with sensitive variables
 - SSH key validation
 
