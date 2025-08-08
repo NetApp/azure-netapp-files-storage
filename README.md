@@ -78,14 +78,40 @@ azure-netapp-files-storage/
 
 ### Option 2: Deploy to Azure
 
+Choose your deployment scenario and click the button to deploy directly to Azure Portal:
+
+#### 📁 Basic NFS Volume
+Deploy only Azure NetApp Files infrastructure (account, pool, volume)
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNetApp%2Fazure-netapp-files-storage%2Fmain%2Farm-templates%2Fnfs-volume%2Fnetapp-volume-template.json?target=_blank" target="_blank">
+<img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
+</a>
+
+**Includes:** NetApp Account, Capacity Pool, NFS Volume, Virtual Network with delegated subnet
+
+#### 🖥️ Single Linux VM with NFS
+Deploy Linux VM with mounted NFS volume and network configuration
+
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNetApp%2Fazure-netapp-files-storage%2Fmain%2Farm-templates%2Flinux-vm-with-nfs%2Flinux-vm-anf-nfs-template.json?target=_blank" target="_blank">
 <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
 </a>
 
-1. **Click the button above**
+**Includes:** Ubuntu 18.04-LTS VM, Mounted NFS volume, Network Security Group, Public IP for SSH access
+
+#### 🏢 Multiple Linux VMs with NFS
+Deploy multiple VMs with shared NFS storage and load balancing
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNetApp%2Fazure-netapp-files-storage%2Fmain%2Farm-templates%2Fmulti-linux-vms-with-nfs%2Fazlinux-multi-vm-anf-template.json?target=_blank" target="_blank">
+<img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
+</a>
+
+**Includes:** Multiple Ubuntu VMs (configurable count), Shared NFS volume across all VMs, Load Balancer for high availability, Network Security Groups
+
+**💡 How it works:**
+1. **Click any "Deploy to Azure" button above**
 2. **Sign in with your Azure credentials**
-3. **Fill in the parameters**
-4. **Click "Review + Create"**
+3. **Fill in the required parameters**
+4. **Click "Review + Create" to deploy**
 
 ### Option 3: Manual Deployment
 
