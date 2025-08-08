@@ -31,9 +31,9 @@ azure-netapp-files-storage/
 
 | Template | ARM Templates | Terraform | PowerShell |
 |----------|---------------|-----------|------------|
-| NFS Volume | :white_check_mark: |  | |
-| Linux VM with NFS | :white_check_mark: |  |  |
-| Multi Linux VMs with NFS | :white_check_mark: |  |  |
+| NFS Volume | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Linux VM with NFS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Multi Linux VMs with NFS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 ## Coming Soon
 
