@@ -12,41 +12,7 @@ provider "azurerm" {
   features {}
 }
 
-# Variables
-variable "volume_name" {
-  description = "Name of the NetApp volume"
-  type        = string
-}
-
-variable "volume_size_gib" {
-  description = "Size of the NetApp volume in GiB"
-  type        = number
-  default     = 100
-}
-
-variable "location" {
-  description = "Location for all resources"
-  type        = string
-  default     = "eastus"
-}
-
-variable "vnet_name" {
-  description = "Name of the virtual network"
-  type        = string
-  default     = "anf-vnet"
-}
-
-variable "project_name" {
-  description = "Project name for tagging and resource management"
-  type        = string
-  default     = "dev"
-}
-
-variable "allowed_clients" {
-  description = "IP address range allowed to access the NFS volume (CIDR format)"
-  type        = string
-  default     = "10.0.0.0/24"
-}
+# Variables are defined in variables.tf
 
 # Local values
 locals {
@@ -57,9 +23,12 @@ locals {
   netapp_subnet_prefix = "10.0.1.0/24"
   
   common_tags = {
-    project    = var.project_name
-    created_by = "Terraform"
-    created_on = formatdate("YYYY-MM-DD", timestamp())
+    project                = var.project_name
+    created_by            = "Terraform"
+    created_on            = formatdate("YYYY-MM-DD", timestamp())
+    anf_plg               = "true"
+    anf_template_version  = "1.0.0"
+    anf_deployment_id     = formatdate("YYYYMMDD-hhmmss", timestamp())
   }
 }
 
@@ -98,7 +67,7 @@ resource "azurerm_subnet" "netapp_subnet" {
   delegation {
     name = "NetAppDelegation"
     service_delegation {
-      name = "Microsoft.NetApp/volumes"
+      name = "Microsoft.Netapp/volumes"
     }
   }
 }
@@ -141,9 +110,6 @@ resource "azurerm_netapp_volume" "netapp_volume" {
     allowed_clients   = [var.allowed_clients]
     unix_read_only    = false
     unix_read_write   = true
-    nfsv3_enabled     = true
-    nfsv41_enabled    = false
-    cifs_enabled      = false
     root_access_enabled = false
   }
 
