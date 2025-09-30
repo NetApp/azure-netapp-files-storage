@@ -481,7 +481,8 @@
         "count": "[parameters('vmCount')]",
         "input": {
           "vmName": "[concat(parameters('vmNamePrefix'), '-', copyIndex(1))]",
-          "publicIP": "[if(parameters('createPublicIPs'), reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmNamePrefix'), '-ip-', copyIndex(1)))).ipAddress, 'No public IP')]"
+          "publicIPResourceId": "[if(parameters('createPublicIPs'), resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmNamePrefix'), '-ip-', copyIndex(1))), 'No public IP')]",
+          "note": "Public IP will be assigned after VM starts. Check Azure Portal for actual IP address."
         }
       }
     },
