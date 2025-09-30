@@ -96,7 +96,7 @@ Deploy Linux VM with mounted NFS volume and network configuration
 <img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
 </a>
 
-**Includes:** Ubuntu 18.04-LTS VM, Mounted NFS volume, Network Security Group, Public IP for SSH access
+**Includes:** Ubuntu 22.04-LTS VM, Mounted NFS volume, Network Security Group, Public IP for SSH access
 
 #### 🏢 Multiple Linux VMs with NFS
 Deploy multiple VMs with shared NFS storage and load balancing
