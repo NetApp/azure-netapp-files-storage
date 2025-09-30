@@ -58,7 +58,6 @@
       "name": "[parameters('vnetName')]",
       "location": "[parameters('location')]",
       "tags": {
-        "project": "[parameters('projectName')]",
         "purpose": "NetApp Files Infrastructure"
       },
       "properties": {
@@ -91,7 +90,6 @@
       "name": "[variables('netAppAccountName')]",
       "location": "[parameters('location')]",
       "tags": {
-        "project": "[parameters('projectName')]",
         "createdBy": "ANF-Template",
         "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
@@ -109,7 +107,6 @@
         "[resourceId('Microsoft.NetApp/netAppAccounts', variables('netAppAccountName'))]"
       ],
       "tags": {
-        "project": "[parameters('projectName')]",
         "createdBy": "ANF-Template",
         "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
@@ -131,7 +128,6 @@
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
       ],
       "tags": {
-        "project": "[parameters('projectName')]",
         "volumeName": "[parameters('volumeName')]",
         "createdBy": "ANF-Template",
         "createdOn": "[utcNow('yyyy-MM-dd')]",
