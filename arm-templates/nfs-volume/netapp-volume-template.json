@@ -138,7 +138,13 @@
               "nfsv3": true,
               "nfsv41": false,
               "allowedClients": "[parameters('allowedClients')]",
-              "hasRootAccess": false
+              "hasRootAccess": false,
+              "kerberos5ReadOnly": false,
+              "kerberos5ReadWrite": false,
+              "kerberos5iReadOnly": false,
+              "kerberos5iReadWrite": false,
+              "kerberos5pReadOnly": false,
+              "kerberos5pReadWrite": false
             }
           ]
         }

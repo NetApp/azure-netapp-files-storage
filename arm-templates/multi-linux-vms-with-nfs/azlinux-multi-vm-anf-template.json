@@ -353,7 +353,13 @@
               "cifs": false,
               "nfsv3": true,
               "nfsv41": false,
-              "allowedClients": "[variables('vmSubnetAddressPrefix')]"
+              "allowedClients": "[variables('vmSubnetAddressPrefix')]",
+              "kerberos5ReadOnly": false,
+              "kerberos5ReadWrite": false,
+              "kerberos5iReadOnly": false,
+              "kerberos5iReadWrite": false,
+              "kerberos5pReadOnly": false,
+              "kerberos5pReadWrite": false
             }
           ]
         }
