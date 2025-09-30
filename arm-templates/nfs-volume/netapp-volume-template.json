@@ -84,10 +84,8 @@
       "location": "[parameters('location')]",
       "tags": {
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {}
     },
@@ -101,10 +99,8 @@
       ],
       "tags": {
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {
         "serviceLevel": "Standard",
@@ -123,10 +119,8 @@
       "tags": {
         "volumeName": "[parameters('volumeName')]",
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {
         "serviceLevel": "Standard",

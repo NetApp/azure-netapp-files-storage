@@ -286,10 +286,8 @@
       "tags": {
         "purpose": "Multi-VM NetApp Files Infrastructure",
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {}
     },
@@ -304,10 +302,8 @@
       "tags": {
         "purpose": "Multi-VM NetApp Files Infrastructure",
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {
         "serviceLevel": "[parameters('netAppServiceLevel')]",
@@ -327,10 +323,8 @@
         "purpose": "Multi-VM NetApp Files Infrastructure",
         "volumeName": "[parameters('netAppVolumeName')]",
         "createdBy": "ANF-Template",
-        "createdOn": "[utcNow('yyyy-MM-dd')]",
         "anf-plg": "true",
-        "anf-template-version": "1.0.0",
-        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+        "anf-template-version": "1.0.0"
       },
       "properties": {
         "serviceLevel": "[parameters('netAppServiceLevel')]",
