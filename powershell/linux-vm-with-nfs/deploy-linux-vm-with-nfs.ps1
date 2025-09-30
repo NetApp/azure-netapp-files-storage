@@ -114,6 +114,9 @@ $commonTags = @{
     Project = $ProjectName
     CreatedBy = "PowerShell"
     CreatedOn = (Get-Date).ToString("yyyy-MM-dd")
+    ANF_PLG = "true"
+    ANF_Template_Version = "1.0.0"
+    ANF_Deployment_ID = (Get-Date).ToString("yyyyMMdd-HHmmss")
 }
 
 Write-Host "Starting Linux VM with NFS deployment..." -ForegroundColor Green
