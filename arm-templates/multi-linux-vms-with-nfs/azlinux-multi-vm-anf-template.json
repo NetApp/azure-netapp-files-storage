@@ -118,13 +118,6 @@
         "description": "Name of the virtual network"
       }
     },
-    "projectName": {
-      "type": "string",
-      "defaultValue": "anf-storage-project",
-      "metadata": {
-        "description": "Name of the project for resource tagging"
-      }
-    },
     "subnetNameVM": {
       "type": "string",
       "defaultValue": "azlinux-vm-subnet",

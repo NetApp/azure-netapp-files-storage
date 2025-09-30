@@ -29,13 +29,6 @@
         "description": "Name of the virtual network"
       }
     },
-    "projectName": {
-      "type": "string",
-      "defaultValue": "dev",
-      "metadata": {
-        "description": "Project name for tagging and resource management"
-      }
-    },
     "allowedClients": {
       "type": "string",
       "defaultValue": "10.0.0.0/24",
