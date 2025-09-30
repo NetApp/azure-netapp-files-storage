@@ -115,6 +115,13 @@
       "metadata": {
         "description": "Name of the NetApp subnet (must be named 'netappSubnet')"
       }
+    },
+    "projectName": {
+      "type": "string",
+      "defaultValue": "anf-storage-project",
+      "metadata": {
+        "description": "Name of the project for resource tagging"
+      }
     }
   },
   "variables": {
