@@ -283,6 +283,15 @@
       "apiVersion": "2022-01-01",
       "name": "[parameters('netAppAccountName')]",
       "location": "[parameters('location')]",
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "purpose": "Multi-VM NetApp Files Infrastructure",
+        "createdBy": "ANF-Template",
+        "createdOn": "[utcNow('yyyy-MM-dd')]",
+        "anf-plg": "true",
+        "anf-template-version": "1.0.0",
+        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+      },
       "properties": {}
     },
     {
@@ -293,6 +302,15 @@
       "dependsOn": [
         "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('netAppAccountName'))]"
       ],
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "purpose": "Multi-VM NetApp Files Infrastructure",
+        "createdBy": "ANF-Template",
+        "createdOn": "[utcNow('yyyy-MM-dd')]",
+        "anf-plg": "true",
+        "anf-template-version": "1.0.0",
+        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+      },
       "properties": {
         "serviceLevel": "[parameters('netAppServiceLevel')]",
         "size": "[mul(parameters('netAppPoolSizeInTB'), 1099511627776)]"
@@ -307,6 +325,16 @@
         "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('netAppAccountName'), parameters('netAppPoolName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
       ],
+      "tags": {
+        "project": "[parameters('projectName')]",
+        "purpose": "Multi-VM NetApp Files Infrastructure",
+        "volumeName": "[parameters('netAppVolumeName')]",
+        "createdBy": "ANF-Template",
+        "createdOn": "[utcNow('yyyy-MM-dd')]",
+        "anf-plg": "true",
+        "anf-template-version": "1.0.0",
+        "anf-deployment-id": "[utcNow('yyyyMMdd-HHmmss')]"
+      },
       "properties": {
         "serviceLevel": "[parameters('netAppServiceLevel')]",
         "creationToken": "[parameters('netAppVolumeName')]",
