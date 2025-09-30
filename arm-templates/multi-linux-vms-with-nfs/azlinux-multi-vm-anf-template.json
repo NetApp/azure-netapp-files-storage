@@ -138,6 +138,18 @@
       "metadata": {
         "description": "IP address or CIDR range allowed for SSH access (use * for any, recommend specific IP/range)"
       }
+    },
+    "ubuntuOSVersion": {
+      "type": "string",
+      "defaultValue": "22_04-lts-gen2",
+      "allowedValues": [
+        "20_04-lts-gen2",
+        "22_04-lts-gen2",
+        "24_04-lts-gen2"
+      ],
+      "metadata": {
+        "description": "The Ubuntu version for the VMs. Default: Ubuntu 22.04-LTS"
+      }
     }
   },
   "variables": {
@@ -373,7 +385,7 @@
           "imageReference": {
             "publisher": "Canonical",
             "offer": "0001-com-ubuntu-server-jammy",
-            "sku": "22_04-lts-gen2",
+            "sku": "[parameters('ubuntuOSVersion')]",
             "version": "latest"
           },
           "osDisk": {
