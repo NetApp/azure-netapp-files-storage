@@ -4,29 +4,103 @@ package_upgrade: true
 
 packages:
   - nfs-common
+  - curl
+  - jq
+
+write_files:
+  - path: /opt/mount-nfs.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      
+      VOLUME_IP="${volume_ip}"
+      VOLUME_NAME="${volume_name}"
+      VM_INDEX="${vm_index}"
+      MOUNT_POINT="/mnt/${volume_name}"
+      
+      echo "Starting NFS mount process for VM ${vm_index}..."
+      echo "Volume IP: ${volume_ip}"
+      echo "Volume Name: ${volume_name}"
+      echo "Mount Point: /mnt/${volume_name}"
+      
+      # Wait for NFS service to be available (retry logic)
+      echo "Waiting for NFS service to be available..."
+      for i in {1..30}; do
+        if showmount -e ${volume_ip} >/dev/null 2>&1; then
+          echo "NFS service is available"
+          break
+        fi
+        echo "Attempt $$i/30: NFS service not ready, waiting 10 seconds..."
+        sleep 10
+      done
+      
+      # Create mount point
+      echo "Creating mount point: /mnt/${volume_name}"
+      mkdir -p /mnt/${volume_name}
+      
+      # Test NFS connectivity
+      echo "Testing NFS connectivity..."
+      if ! showmount -e ${volume_ip} | grep -q ${volume_name}; then
+        echo "ERROR: Volume ${volume_name} not found in NFS exports"
+        exit 1
+      fi
+      
+      # Mount the NFS volume with retry logic
+      echo "Mounting NFS volume..."
+      for i in {1..5}; do
+        if mount -t nfs -o vers=3,rsize=65536,wsize=65536,tcp,hard,intr ${volume_ip}:/${volume_name} /mnt/${volume_name}; then
+          echo "NFS volume mounted successfully"
+          break
+        else
+          echo "Mount attempt $$i/5 failed, retrying in 5 seconds..."
+          sleep 5
+        fi
+      done
+      
+      # Verify mount
+      if ! mountpoint -q /mnt/${volume_name}; then
+        echo "ERROR: Mount verification failed"
+        exit 1
+      fi
+      
+      # Add to fstab for persistent mounting
+      echo "Adding to fstab for persistent mounting..."
+      FSTAB_ENTRY="${volume_ip}:/${volume_name} /mnt/${volume_name} nfs rw,hard,rsize=65536,wsize=65536,vers=3,tcp,intr 0 0"
+      if ! grep -q "$$FSTAB_ENTRY" /etc/fstab; then
+        echo "$$FSTAB_ENTRY" >> /etc/fstab
+        echo "Added to fstab: $$FSTAB_ENTRY"
+      fi
+      
+      # Create VM-specific directory
+      echo "Creating VM-specific directory..."
+      mkdir -p /mnt/${volume_name}/vm-${vm_index}
+      
+      # Create a test file to verify the mount
+      echo "Creating test file..."
+      echo "VM ${vm_index} - NFS volume mounted successfully at $(date)" > /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
+      echo "NFS Volume IP: ${volume_ip}" >> /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
+      echo "Mount Point: /mnt/${volume_name}" >> /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
+      
+      # Set permissions
+      echo "Setting permissions..."
+      chmod 755 /mnt/${volume_name}
+      chmod 755 /mnt/${volume_name}/vm-${vm_index}
+      
+      # Create a shared directory for collaboration
+      echo "Creating shared directory..."
+      mkdir -p /mnt/${volume_name}/shared
+      chmod 777 /mnt/${volume_name}/shared
+      
+      # Create a shared test file
+      echo "VM ${vm_index} - Shared access test at $(date)" > /mnt/${volume_name}/shared/vm-${vm_index}-test.txt
+      
+      echo "NFS mount process completed successfully for VM ${vm_index}"
+      echo "Mount point: /mnt/${volume_name}"
+      echo "VM directory: /mnt/${volume_name}/vm-${vm_index}"
+      echo "Shared directory: /mnt/${volume_name}/shared"
 
 runcmd:
-  # Create mount point
-  - mkdir -p /mnt/${volume_name}
-  
-  # Mount the NFS volume
-  - mount -t nfs -o vers=3 ${volume_ip}:/${volume_name} /mnt/${volume_name}
-  
-  # Add to fstab for persistent mounting
-  - echo "${volume_ip}:/${volume_name} /mnt/${volume_name} nfs rw,hard,rsize=65536,wsize=65536,vers=3,tcp 0 0" >> /etc/fstab
-  
-  # Create VM-specific directory
-  - mkdir -p /mnt/${volume_name}/vm-${vm_index}
-  
-  # Create a test file to verify the mount
-  - echo "VM ${vm_index} - NFS volume mounted successfully at $(date)" > /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
-  
-  # Set permissions
-  - chmod 755 /mnt/${volume_name}
-  - chmod 755 /mnt/${volume_name}/vm-${vm_index}
-  
-  # Create a shared directory for collaboration
-  - mkdir -p /mnt/${volume_name}/shared
-  - chmod 777 /mnt/${volume_name}/shared
+  - /opt/mount-nfs.sh
 
-final_message: "VM ${vm_index} - NFS volume has been mounted successfully" 
+final_message: "VM ${vm_index} - NFS volume mount process completed" 

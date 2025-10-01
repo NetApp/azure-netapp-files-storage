@@ -56,6 +56,18 @@ variable "create_public_ips" {
   default     = true
 }
 
+variable "create_resource_group" {
+  description = "Whether to create a new resource group or use an existing one"
+  type        = bool
+  default     = true
+}
+
+variable "resource_group_name" {
+  description = "Name of the resource group (will be created if create_resource_group is true)"
+  type        = string
+  default     = "rg-dev-anf-multi-vm"
+}
+
 variable "location" {
   description = "Location for all resources"
   type        = string

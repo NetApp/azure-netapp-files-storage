@@ -1,0 +1,36 @@
+# Example Terraform Variables File
+# Copy this to terraform.tfvars and customize
+
+# Resource Group Configuration
+create_resource_group = false              # Set to true to create new RG, false to use existing
+resource_group_name   = "rg-dev-anf-multi-vm"  # Name of RG to use or create
+
+# VM Configuration
+admin_username    = "azureuser"
+admin_password    = "YourSecurePassword123!"  # Change this!
+vm_name_prefix    = "azlinuxvms"
+vm_count          = 3
+vm_size           = "Standard_D2s_v3"
+
+# Public IP Configuration
+create_public_ips = true                   # Set to false for private-only VMs
+
+# Location
+location = "eastus"
+
+# NetApp Configuration
+netapp_account_name      = "azlinux-netapp-account"
+netapp_pool_name         = "azlinux-netapp-pool"
+netapp_pool_size_in_tb   = 4
+netapp_volume_name       = "azlinux-shared-nfs"
+netapp_volume_size       = 500
+netapp_service_level     = "Standard"
+
+# Network Configuration
+vnet_name           = "azlinux-vnet"
+subnet_name_vm      = "vmSubnet"
+subnet_name_netapp  = "netappSubnet"
+
+# Project
+project_name = "dev"
+
