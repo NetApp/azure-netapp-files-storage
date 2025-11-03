@@ -9,15 +9,21 @@ azure-netapp-files-storage/
 ├── arm-templates/
 │   ├── nfs-volume/
 │   ├── linux-vm-with-nfs/
-│   └── multi-linux-vms-with-nfs/
+│   ├── multi-linux-vms-with-nfs/
+│   └── db/
+│       └── postgresql-vm-anf/
 ├── terraform/
 │   ├── nfs-volume/
 │   ├── linux-vm-with-nfs/
-│   └── multi-linux-vms-with-nfs/
+│   ├── multi-linux-vms-with-nfs/
+│   └── db/
+│       └── postgresql-vm-anf/
 ├── powershell/
 │   ├── nfs-volume/
 │   ├── linux-vm-with-nfs/
-│   └── multi-linux-vms-with-nfs/
+│   ├── multi-linux-vms-with-nfs/
+│   └── db/
+│       └── postgresql-vm-anf/
 ├── docs/
 │   ├── architecture-diagrams/
 │   ├── deployment-guides/
@@ -34,6 +40,7 @@ azure-netapp-files-storage/
 | NFS Volume | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Linux VM with NFS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Multi Linux VMs with NFS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| PostgreSQL on VM + ANF | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 ## Coming Soon
 
@@ -46,7 +53,7 @@ azure-netapp-files-storage/
 - Active Azure subscription
 - Contributor or Owner permissions on target resource group
 - Azure NetApp Files enabled in your subscription
-- Appropriate regional availability for Azure NetApp Files
+- Appropriate regional availability for services
 
 ### Tools Required
 
@@ -62,6 +69,7 @@ azure-netapp-files-storage/
 **For PowerShell:**
 - PowerShell 7.0+ (cross-platform)
 - Az PowerShell module 8.0+
+- Required modules: Az.Compute, Az.Network, Az.NetAppFiles, Az.Resources (for PostgreSQL VM + ANF)
 
 ## Deployment Options
 
@@ -106,6 +114,15 @@ Deploy multiple VMs with shared NFS storage and load balancing
 </a>
 
 **Includes:** Multiple Ubuntu VMs (configurable count), Shared NFS volume across all VMs, Load Balancer for high availability, Network Security Groups
+
+#### 🖥️ PostgreSQL on VM with ANF
+Deploy PostgreSQL on Linux VM with Azure NetApp Files storage
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNetApp%2Fazure-netapp-files-storage%2Fmain%2Farm-templates%2Fdb%2Fpostgresql-vm-anf%2Fpostgresql-vm-anf-template.json?target=_blank" target="_blank">
+<img src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/>
+</a>
+
+**Includes:** Ubuntu 22.04-LTS VM, PostgreSQL installed and configured, Azure NetApp Files volume for data storage, Network Security Group, PostgreSQL data directory on ANF volume
 
 **💡 How it works:**
 1. **Click any "Deploy to Azure" button above**
@@ -156,6 +173,16 @@ Enterprise scenario including:
 - Shared NFS volumes across VMs
 - Load balancing configuration
 - High availability setup
+
+### PostgreSQL on VM with ANF
+Deploys PostgreSQL on a Linux VM with Azure NetApp Files storage:
+- Linux virtual machine (Ubuntu 22.04-LTS)
+- PostgreSQL installed and configured on the VM
+- Azure NetApp Files volume (NFS) for PostgreSQL data storage
+- PostgreSQL data directory mounted on ANF volume
+- Network security group with PostgreSQL and SSH access
+- Public IP for remote access (optional)
+- Full control over PostgreSQL configuration and extensions
 
 ## Security Best Practices
 

@@ -1,0 +1,37 @@
+# Example Terraform Variables File
+# Copy this to terraform.tfvars and customize
+
+# VM Configuration
+vm_name          = "postgresql-vm"
+admin_username   = "azureuser"
+admin_password   = "YourVMAdminPassword123!"  # Change this!
+vm_size          = "Standard_D2s_v3"
+
+# PostgreSQL Configuration
+postgresql_version        = "15"  # 14, 15, or 16
+postgresql_admin_password = "PostgresAdminPassword123!"  # Change this!
+database_name             = "mydb"
+database_user             = "appuser"
+database_password         = "DatabaseUserPassword123!"  # Change this!
+postgresql_port           = 5432
+
+# Network Configuration
+create_public_ip = true  # Set to false for private-only access
+vnet_name        = "postgresql-vnet"
+subnet_name_vm   = "vmSubnet"
+subnet_name_netapp = "netappSubnet"
+
+# ANF Configuration
+netapp_account_name    = "postgresql-netapp-account"
+netapp_pool_name       = "postgresql-pool"
+netapp_pool_size_in_tb = 4
+netapp_volume_name     = "postgresql-data"
+netapp_volume_size     = 200  # GB
+netapp_service_level   = "Standard"  # Standard, Premium, or Ultra
+
+# Location
+location = "eastus"
+
+# Project
+project_name = "dev"
+

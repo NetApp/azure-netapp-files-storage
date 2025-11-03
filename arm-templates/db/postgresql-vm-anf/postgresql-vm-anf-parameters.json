@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "value": "postgresql-vm"
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "authenticationType": {
+      "value": "password"
+    },
+    "adminPasswordOrKey": {
+      "value": "YourVMAdminPassword123!"
+    },
+    "vmSize": {
+      "value": "Standard_D2s_v3"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "postgresqlVersion": {
+      "value": "15"
+    },
+    "postgresqlAdminPassword": {
+      "value": "PostgresAdminPassword123!"
+    },
+    "databaseName": {
+      "value": "mydb"
+    },
+    "databaseUser": {
+      "value": "appuser"
+    },
+    "databasePassword": {
+      "value": "DatabaseUserPassword123!"
+    },
+    "postgresqlPort": {
+      "value": 5432
+    },
+    "netAppAccountName": {
+      "value": "postgresql-netapp-account"
+    },
+    "netAppPoolName": {
+      "value": "postgresql-pool"
+    },
+    "netAppPoolSizeInTB": {
+      "value": 4
+    },
+    "netAppVolumeName": {
+      "value": "postgresql-data"
+    },
+    "netAppVolumeSize": {
+      "value": 200
+    },
+    "netAppServiceLevel": {
+      "value": "Standard"
+    },
+    "vnetName": {
+      "value": "postgresql-vnet"
+    },
+    "subnetNameVM": {
+      "value": "vmSubnet"
+    },
+    "subnetNameNetApp": {
+      "value": "netappSubnet"
+    },
+    "createPublicIP": {
+      "value": true
+    },
+    "ubuntuOSVersion": {
+      "value": "22_04-lts-gen2"
+    }
+  }
+}
+

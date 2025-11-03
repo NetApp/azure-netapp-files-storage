@@ -35,7 +35,7 @@ write_files:
         sleep 10
       done
       
-      # Create mount point
+  # Create mount point
       echo "Creating mount point: /mnt/${volume_name}"
       mkdir -p /mnt/${volume_name}
       
@@ -45,7 +45,7 @@ write_files:
         echo "ERROR: Volume ${volume_name} not found in NFS exports"
         exit 1
       fi
-      
+  
       # Mount the NFS volume with retry logic
       echo "Mounting NFS volume..."
       for i in {1..5}; do
@@ -63,35 +63,35 @@ write_files:
         echo "ERROR: Mount verification failed"
         exit 1
       fi
-      
-      # Add to fstab for persistent mounting
+  
+  # Add to fstab for persistent mounting
       echo "Adding to fstab for persistent mounting..."
       FSTAB_ENTRY="${volume_ip}:/${volume_name} /mnt/${volume_name} nfs rw,hard,rsize=65536,wsize=65536,vers=3,tcp,intr 0 0"
       if ! grep -q "$$FSTAB_ENTRY" /etc/fstab; then
         echo "$$FSTAB_ENTRY" >> /etc/fstab
         echo "Added to fstab: $$FSTAB_ENTRY"
       fi
-      
-      # Create VM-specific directory
+  
+  # Create VM-specific directory
       echo "Creating VM-specific directory..."
       mkdir -p /mnt/${volume_name}/vm-${vm_index}
-      
-      # Create a test file to verify the mount
+  
+  # Create a test file to verify the mount
       echo "Creating test file..."
       echo "VM ${vm_index} - NFS volume mounted successfully at $(date)" > /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
       echo "NFS Volume IP: ${volume_ip}" >> /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
       echo "Mount Point: /mnt/${volume_name}" >> /mnt/${volume_name}/vm-${vm_index}/mount-test.txt
-      
-      # Set permissions
+  
+  # Set permissions
       echo "Setting permissions..."
       chmod 755 /mnt/${volume_name}
       chmod 755 /mnt/${volume_name}/vm-${vm_index}
-      
-      # Create a shared directory for collaboration
+  
+  # Create a shared directory for collaboration
       echo "Creating shared directory..."
       mkdir -p /mnt/${volume_name}/shared
       chmod 777 /mnt/${volume_name}/shared
-      
+
       # Create a shared test file
       echo "VM ${vm_index} - Shared access test at $(date)" > /mnt/${volume_name}/shared/vm-${vm_index}-test.txt
       
