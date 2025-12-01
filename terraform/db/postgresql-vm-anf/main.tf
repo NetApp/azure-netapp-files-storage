@@ -202,14 +202,6 @@ resource "azurerm_netapp_volume" "netapp_volume" {
   storage_quota_in_gb = var.netapp_volume_size
   protocols           = ["NFSv3"]
 
-  export_policy_rule {
-    rule_index          = 1
-    allowed_clients     = [local.vm_subnet_prefix]
-    unix_read_only      = false
-    unix_read_write     = true
-    root_access_enabled = true
-  }
-
   tags = merge(local.common_tags, {
     volume_name = var.netapp_volume_name
     created_by  = "PostgreSQL-ANF-Terraform"
@@ -286,14 +278,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# VM Run Command to setup PostgreSQL with ANF
-resource "azurerm_virtual_machine_run_command" "setup_postgresql" {
-  name               = "setupPostgreSQL"
-  location           = local.resource_group_location
-  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
+# VM Extension to setup PostgreSQL with ANF (working minimal version)
+resource "azurerm_virtual_machine_extension" "setup_postgresql" {
+  name                        = "setupPostgreSQL"
+  virtual_machine_id          = azurerm_linux_virtual_machine.vm.id
+  publisher                   = "Microsoft.Azure.Extensions"
+  type                        = "CustomScript"
+  type_handler_version        = "2.1"
+  auto_upgrade_minor_version  = true
 
-  source {
-    script = templatefile("${path.module}/setup-postgresql.sh", {
+  settings = jsonencode({
+    skipDos2Unix = false
+  })
+
+  protected_settings = jsonencode({
+    script = base64encode(templatefile("${path.module}/setup-postgresql-minimal.sh", {
       postgresql_version        = var.postgresql_version
       postgresql_admin_password = var.postgresql_admin_password
       database_name             = var.database_name
@@ -302,13 +301,20 @@ resource "azurerm_virtual_machine_run_command" "setup_postgresql" {
       volume_ip                 = azurerm_netapp_volume.netapp_volume.mount_ip_addresses[0]
       volume_name               = var.netapp_volume_name
       postgresql_port           = var.postgresql_port
-    })
+    }))
+  })
+
+  timeouts {
+    create = "30m"
+    delete = "10m"
   }
 
   depends_on = [
     azurerm_linux_virtual_machine.vm,
     azapi_update_resource.netapp_volume_export_policy
   ]
+
+  tags = local.common_tags
 }
 
 # Outputs

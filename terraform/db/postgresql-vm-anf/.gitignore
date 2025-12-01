@@ -1,0 +1,29 @@
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfplan
+*.tfplan.*
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

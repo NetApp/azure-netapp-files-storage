@@ -18,7 +18,7 @@
       "value": "Standard_D2s_v3"
     },
     "location": {
-      "value": "eastus"
+      "value": "eastus2"
     },
     "postgresqlVersion": {
       "value": "15"
@@ -39,7 +39,7 @@
       "value": 5432
     },
     "netAppAccountName": {
-      "value": "postgresql-netapp-account"
+      "value": "postgresql-netapp-automated"
     },
     "netAppPoolName": {
       "value": "postgresql-pool"
@@ -51,7 +51,7 @@
       "value": "postgresql-data"
     },
     "netAppVolumeSize": {
-      "value": 200
+      "value": 500
     },
     "netAppServiceLevel": {
       "value": "Standard"

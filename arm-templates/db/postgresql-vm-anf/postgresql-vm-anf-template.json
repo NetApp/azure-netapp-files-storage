@@ -189,6 +189,7 @@
     "vnetAddressPrefix": "10.0.0.0/16",
     "vmSubnetAddressPrefix": "10.0.1.0/24",
     "netAppSubnetAddressPrefix": "10.0.2.0/24",
+    "postgresqlDataDir": "[concat('/mnt/', parameters('netAppVolumeName'), '/postgresql-data')]",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -204,7 +205,7 @@
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2020-05-01",
+      "apiVersion": "2020-11-01",
       "name": "[parameters('vnetName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -245,7 +246,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2020-05-01",
+      "apiVersion": "2020-11-01",
       "name": "[variables('nsgName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -300,7 +301,7 @@
     {
       "condition": "[parameters('createPublicIP')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2020-05-01",
+      "apiVersion": "2020-11-01",
       "name": "[variables('publicIPAddressName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -317,7 +318,7 @@
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2020-05-01",
+      "apiVersion": "2020-11-01",
       "name": "[variables('networkInterfaceName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
@@ -350,7 +351,7 @@
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2022-03-01",
       "name": "[parameters('netAppAccountName')]",
       "location": "[parameters('location')]",
       "tags": {
@@ -359,11 +360,13 @@
         "pg-plg": "true",
         "pg-template-version": "1.0.0"
       },
-      "properties": {}
+      "properties": {
+        "activeDirectories": []
+      }
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2022-03-01",
       "name": "[concat(parameters('netAppAccountName'), '/', parameters('netAppPoolName'))]",
       "location": "[parameters('location')]",
       "dependsOn": [
@@ -381,7 +384,7 @@
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2022-03-01",
       "name": "[concat(parameters('netAppAccountName'), '/', parameters('netAppPoolName'), '/', parameters('netAppVolumeName'))]",
       "location": "[parameters('location')]",
       "dependsOn": [
@@ -409,14 +412,14 @@
               "cifs": false,
               "nfsv3": true,
               "nfsv41": false,
-              "allowedClients": "[variables('vmSubnetAddressPrefix')]",
-              "rootAccessEnabled": true,
               "kerberos5ReadOnly": false,
               "kerberos5ReadWrite": false,
               "kerberos5iReadOnly": false,
               "kerberos5iReadWrite": false,
               "kerberos5pReadOnly": false,
-              "kerberos5pReadWrite": false
+              "kerberos5pReadWrite": false,
+              "hasRootAccess": true,
+              "allowedClients": "[variables('vmSubnetAddressPrefix')]"
             }
           ]
         }
@@ -424,7 +427,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-11-01",
       "name": "[parameters('vmName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
@@ -468,38 +471,24 @@
         }
       }
     },
+
     {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "name": "waitForANFVolume",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))]"
-      ],
-      "kind": "AzureCLI",
-      "properties": {
-        "azCliVersion": "2.20.0",
-        "timeout": "PT30M",
-        "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess",
-        "scriptContent": "[concat('#!/bin/bash\necho \"Waiting for NetApp volume to be fully provisioned...\"\nsleep 180\necho \"ANF volume provision wait complete\"\necho \"NetApp IP address is: $(az netapp volume show --resource-group ', resourceGroup().name, ' --account-name ', parameters('netAppAccountName'), ' --pool-name ', parameters('netAppPoolName'), ' --volume-name ', parameters('netAppVolumeName'), ' --query \\'mountTargets[0].ipAddress\\' -o tsv)'\n)]"
-      }
-    },
-    {
-      "apiVersion": "2021-07-01",
-      "type": "Microsoft.Compute/virtualMachines/runCommands",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2021-11-01",
       "name": "[concat(parameters('vmName'), '/setupPostgreSQL')]",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
-        "[resourceId('Microsoft.Resources/deploymentScripts', 'waitForANFVolume')]"
+        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))]"
       ],
       "properties": {
-        "asyncExecution": false,
-        "timeoutInSeconds": 1800,
-        "runAsUser": "root",
-        "source": {
-          "script": "[concat('#!/bin/bash\n\nset -e\n\nexec > /var/log/postgresql-setup.log 2>&1\necho \"Starting PostgreSQL setup script at $(date)\"\n\nPOSTGRESQL_VERSION=\"', parameters('postgresqlVersion'), '\"\nPOSTGRESQL_ADMIN_PASSWORD=\"', parameters('postgresqlAdminPassword'), '\"\nDATABASE_NAME=\"', parameters('databaseName'), '\"\nDATABASE_USER=\"', parameters('databaseUser'), '\"\nDATABASE_PASSWORD=\"', parameters('databasePassword'), '\"\nNETAPP_IP=\"', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))).mountTargets[0].ipAddress, '\"\nNETAPP_PATH=\"/', parameters('netAppVolumeName'), '\"\nMOUNT_PATH=\"/mnt/', parameters('netAppVolumeName'), '\"\nPOSTGRESQL_DATA_DIR=\"/mnt/', parameters('netAppVolumeName'), '/postgresql-data\"\nPOSTGRESQL_PORT=', parameters('postgresqlPort'), '\n\necho \"PostgreSQL Version: $POSTGRESQL_VERSION\"\necho \"NetApp IP: $NETAPP_IP\"\necho \"NetApp Path: $NETAPP_PATH\"\necho \"Mount Path: $MOUNT_PATH\"\necho \"PostgreSQL Data Directory: $POSTGRESQL_DATA_DIR\"\n\napt-get update -q\napt-get install -y nfs-common\n\nmkdir -p $MOUNT_PATH\n\nRETRIES=30\ncount=0\nwhile [ $count -lt $RETRIES ]; do\n    if ping -c 1 $NETAPP_IP &> /dev/null; then\n        echo \"NetApp endpoint is reachable\"\n        break\n    fi\n    count=$((count+1))\n    echo \"Waiting for NetApp endpoint... Attempt $count of $RETRIES\"\n    sleep 10\ndone\n\nif [ $count -eq $RETRIES ]; then\n    echo \"ERROR: Could not reach NetApp endpoint after $RETRIES attempts\"\n    exit 1\nfi\n\nmount -t nfs -o rw,hard,rsize=262144,wsize=262144,vers=3,tcp $NETAPP_IP:$NETAPP_PATH $MOUNT_PATH\n\nif ! mount | grep -q \"$MOUNT_PATH\"; then\n    echo \"ERROR: ANF volume mount failed\"\n    exit 1\nfi\n\necho \"ANF volume mounted successfully\"\n\ngrep -v \"$MOUNT_PATH\" /etc/fstab > /etc/fstab.new || true\nmv /etc/fstab.new /etc/fstab\necho \"$NETAPP_IP:$NETAPP_PATH $MOUNT_PATH nfs rw,hard,rsize=262144,wsize=262144,vers=3,tcp 0 0\" >> /etc/fstab\n\necho \"Installing PostgreSQL $POSTGRESQL_VERSION...\"\nexport DEBIAN_FRONTEND=noninteractive\n\napt-get install -y wget ca-certificates\nwget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -\necho \"deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list\napt-get update -q\n\napt-get install -y postgresql-$POSTGRESQL_VERSION postgresql-contrib-$POSTGRESQL_VERSION\n\nsystemctl stop postgresql\n\nmkdir -p $POSTGRESQL_DATA_DIR\nchown postgres:postgres $POSTGRESQL_DATA_DIR\nchmod 700 $POSTGRESQL_DATA_DIR\n\nif [ ! -f \"$POSTGRESQL_DATA_DIR/PG_VERSION\" ]; then\n    echo \"Initializing PostgreSQL data directory on ANF...\"\n    sudo -u postgres /usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb -D $POSTGRESQL_DATA_DIR -E UTF8 --locale=en_US.UTF-8\nfi\n\nPOSTGRESQL_CONF=\"$POSTGRESQL_DATA_DIR/postgresql.conf\"\nPOSTGRESQL_PG_HBA=\"$POSTGRESQL_DATA_DIR/pg_hba.conf\"\n\nsed -i \"s|#data_directory =.*|data_directory = \\'$POSTGRESQL_DATA_DIR\\'|\" $POSTGRESQL_CONF || echo \"data_directory = \\'$POSTGRESQL_DATA_DIR\\'\" >> $POSTGRESQL_CONF\nsed -i \"s|#listen_addresses =.*|listen_addresses = \\'*\\'|\" $POSTGRESQL_CONF || echo \"listen_addresses = \\'*\\'\" >> $POSTGRESQL_CONF\nsed -i \"s|#port =.*|port = $POSTGRESQL_PORT|\" $POSTGRESQL_CONF || echo \"port = $POSTGRESQL_PORT\" >> $POSTGRESQL_CONF\nsed -i \"s|#logging_collector =.*|logging_collector = on|\" $POSTGRESQL_CONF || echo \"logging_collector = on\" >> $POSTGRESQL_CONF\n\nif ! grep -q \"host    all             all\" $POSTGRESQL_PG_HBA; then\n    echo \"host    all             all             0.0.0.0/0               md5\" >> $POSTGRESQL_PG_HBA\nfi\n\nSYSTEMD_OVERRIDE=\"/etc/systemd/system/postgresql.service.d/override.conf\"\nmkdir -p /etc/systemd/system/postgresql.service.d\ncat > $SYSTEMD_OVERRIDE <<EOF\n[Service]\nEnvironment=PGDATA=$POSTGRESQL_DATA_DIR\nExecStart=\nExecStart=/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/postgres -D $POSTGRESQL_DATA_DIR -c config_file=$POSTGRESQL_CONF\nEOF\n\nsystemctl daemon-reload\n\nsudo -u postgres psql -c \"ALTER USER postgres PASSWORD \\'$POSTGRESQL_ADMIN_PASSWORD\\';\" || true\n\nsystemctl start postgresql\nsystemctl enable postgresql\n\nsleep 5\nRETRIES=30\ncount=0\nwhile [ $count -lt $RETRIES ]; do\n    if sudo -u postgres psql -c \"SELECT 1;\" > /dev/null 2>&1; then\n        echo \"PostgreSQL is ready\"\n        break\n    fi\n    count=$((count+1))\n    echo \"Waiting for PostgreSQL... Attempt $count of $RETRIES\"\n    sleep 5\ndone\n\nif [ $count -eq $RETRIES ]; then\n    echo \"ERROR: PostgreSQL did not start properly\"\n    exit 1\nfi\n\nsudo -u postgres psql -c \"CREATE DATABASE $DATABASE_NAME;\" || echo \"Database may already exist\"\nsudo -u postgres psql -c \"CREATE USER $DATABASE_USER WITH PASSWORD \\'$DATABASE_PASSWORD\\';\" || echo \"User may already exist\"\nsudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $DATABASE_USER;\"\nsudo -u postgres psql -d $DATABASE_NAME -c \"GRANT ALL ON SCHEMA public TO $DATABASE_USER;\"\nsudo -u postgres psql -d $DATABASE_NAME -c \"CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);\" || true\n\necho \"PostgreSQL setup completed successfully at $(date)\"\necho \"PostgreSQL data directory: $POSTGRESQL_DATA_DIR\"\necho \"Database: $DATABASE_NAME\"\necho \"User: $DATABASE_USER\"\necho \"Port: $POSTGRESQL_PORT\"\n')]"
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.1",
+        "autoUpgradeMinorVersion": true,
+        "settings": {},
+        "protectedSettings": {
+          "commandToExecute": "[concat('#!/bin/bash\\nset -e\\nexec > /var/log/postgresql-setup.log 2>&1\\necho \"Starting PostgreSQL setup at $(date)\"\\napt-get update -q\\napt-get install -y nfs-common\\nsleep 30\\nmkdir -p /mnt/', parameters('netAppVolumeName'), '\\nmount -t nfs -o rw,hard,rsize=262144,wsize=262144,vers=3,tcp ', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))).mountTargets[0].ipAddress, ':/', parameters('netAppVolumeName'), ' /mnt/', parameters('netAppVolumeName'), '\\necho \"', reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('netAppPoolName'), parameters('netAppVolumeName'))).mountTargets[0].ipAddress, ':/', parameters('netAppVolumeName'), ' /mnt/', parameters('netAppVolumeName'), ' nfs rw,hard,rsize=262144,wsize=262144,vers=3,tcp 0 0\" >> /etc/fstab\\nchmod 755 /mnt/', parameters('netAppVolumeName'), '\\nexport DEBIAN_FRONTEND=noninteractive\\napt-get install -y wget ca-certificates\\nwget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -\\necho \"deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list\\napt-get update -q\\napt-get install -y postgresql-', parameters('postgresqlVersion'), ' postgresql-contrib-', parameters('postgresqlVersion'), '\\nsystemctl stop postgresql@', parameters('postgresqlVersion'), '-main 2>/dev/null || true\\nsystemctl disable postgresql@', parameters('postgresqlVersion'), '-main 2>/dev/null || true\\nsystemctl mask postgresql@', parameters('postgresqlVersion'), '-main 2>/dev/null || true\\npkill -f postgres 2>/dev/null || true\\nrm -f /var/run/postgresql/.s.PGSQL.', parameters('postgresqlPort'), '.lock 2>/dev/null || true\\nsleep 5\\nmkdir -p ', variables('postgresqlDataDir'), '\\nchown postgres:postgres ', variables('postgresqlDataDir'), '\\nchmod 700 ', variables('postgresqlDataDir'), '\\nsudo -u postgres /usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/initdb -D ', variables('postgresqlDataDir'), ' -E UTF8 --locale=C.UTF-8 --auth-local=trust --auth-host=md5\\necho \"listen_addresses = \\047*\\047\" >> ', variables('postgresqlDataDir'), '/postgresql.conf\\necho \"port = ', parameters('postgresqlPort'), '\" >> ', variables('postgresqlDataDir'), '/postgresql.conf\\necho \"logging_collector = on\" >> ', variables('postgresqlDataDir'), '/postgresql.conf\\necho \"log_directory = \\047log\\047\" >> ', variables('postgresqlDataDir'), '/postgresql.conf\\necho \"host all all 0.0.0.0/0 md5\" >> ', variables('postgresqlDataDir'), '/pg_hba.conf\\nmkdir -p /etc/systemd/system/postgresql.service.d\\nprintf \"[Service]\\nType=forking\\nUser=postgres\\nEnvironment=PGDATA=', variables('postgresqlDataDir'), '\\nExecStart=\\nExecStart=/usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_ctl start -D ', variables('postgresqlDataDir'), ' -s -o \\\"-p ', parameters('postgresqlPort'), '\\\" -w -t 300\\nExecReload=/usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_ctl reload -D ', variables('postgresqlDataDir'), ' -s\\nExecStop=/usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_ctl stop -D ', variables('postgresqlDataDir'), ' -s -m fast\\nPIDFile=', variables('postgresqlDataDir'), '/postmaster.pid\\nTimeoutSec=300\\nRemainAfterExit=no\\n\" > /etc/systemd/system/postgresql.service.d/override.conf\\nsystemctl daemon-reload\\nsudo -u postgres /usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_ctl -D ', variables('postgresqlDataDir'), ' start -w -t 60\\nsleep 5\\nfor i in {1..30}; do\\n  if sudo -u postgres /usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_isready -d postgres -h localhost -p ', parameters('postgresqlPort'), '; then\\n    echo \"PostgreSQL is ready!\"\\n    break\\n  fi\\n  echo \"Waiting for PostgreSQL... ($i/30)\"\\n  sleep 2\\ndone\\nsudo -u postgres psql -p ', parameters('postgresqlPort'), ' -c \"ALTER USER postgres PASSWORD \\047', parameters('postgresqlAdminPassword'), '\\047;\"\\nsudo -u postgres psql -p ', parameters('postgresqlPort'), ' -c \"CREATE DATABASE ', parameters('databaseName'), ';\"\\nsudo -u postgres psql -p ', parameters('postgresqlPort'), ' -c \"CREATE USER ', parameters('databaseUser'), ' WITH PASSWORD \\047', parameters('databasePassword'), '\\047;\"\\nsudo -u postgres psql -p ', parameters('postgresqlPort'), ' -c \"GRANT ALL PRIVILEGES ON DATABASE ', parameters('databaseName'), ' TO ', parameters('databaseUser'), ';\"\\nsudo -u postgres /usr/lib/postgresql/', parameters('postgresqlVersion'), '/bin/pg_ctl -D ', variables('postgresqlDataDir'), ' stop -w -t 60\\nsleep 3\\nsystemctl enable postgresql\\nsystemctl start postgresql\\necho \"PostgreSQL setup completed successfully at $(date)\"')]"
         }
       }
     }

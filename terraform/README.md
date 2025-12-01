@@ -1,6 +1,12 @@
 # Azure NetApp Files Terraform Templates
 
-This directory contains Terraform templates for deploying Azure NetApp Files solutions. These templates provide Infrastructure as Code (IaC) alternatives to the ARM templates, offering the same functionality with Terraform's declarative syntax.
+This direc2. **Choose your template:**
+   ```bash
+   cd terraform/nfs-volume/          # Basic NFS volume
+   cd terraform/linux-vm-with-nfs/   # Single VM with NFS
+   cd terraform/multi-linux-vms-with-nfs/  # Multi-VM solution
+   cd terraform/db/postgresql-vm-anf/      # PostgreSQL with ANF
+   ```ontains Terraform templates for deploying Azure NetApp Files solutions. These templates provide Infrastructure as Code (IaC) alternatives to the ARM templates, offering the same functionality with Terraform's declarative syntax.
 
 ## Available Templates
 
@@ -26,6 +32,14 @@ This directory contains Terraform templates for deploying Azure NetApp Files sol
 - Load balancer for high availability
 - Optional public IPs for direct access
 - **Use Case**: Clusters, HPC, web application farms
+
+### 4. [PostgreSQL VM with ANF](./db/postgresql-vm-anf/)
+**Database Solution with NetApp Storage**
+- Linux VM with PostgreSQL installed and configured
+- PostgreSQL data directory on ANF volume
+- Automated database setup and configuration
+- Network security for database and SSH access
+- **Use Case**: Production databases, development environments, data analytics
 
 ## Prerequisites
 
@@ -74,15 +88,16 @@ This directory contains Terraform templates for deploying Azure NetApp Files sol
 
 ## Template Comparison
 
-| Feature | NFS Volume | Linux VM with NFS | Multi-Linux VMs |
-|---------|------------|-------------------|-----------------|
-| **Complexity** | Basic | Intermediate | Advanced |
-| **VMs Created** | 0 | 1 | 1-10 |
-| **NFS Volume** | ✅ | ✅ | ✅ |
-| **Load Balancer** | ❌ | ❌ | ✅ (if >1 VM) |
-| **Public IPs** | ❌ | ✅ | ✅ (optional) |
-| **Cloud-init** | ❌ | ✅ | ✅ |
-| **Auto-mount** | ❌ | ✅ | ✅ |
+| Feature | NFS Volume | Linux VM with NFS | Multi-Linux VMs | PostgreSQL VM |
+|---------|------------|-------------------|-----------------|---------------|
+| **Complexity** | Basic | Intermediate | Advanced | Intermediate |
+| **VMs Created** | 0 | 1 | 1-10 | 1 |
+| **NFS Volume** | ✅ | ✅ | ✅ | ✅ |
+| **Database** | ❌ | ❌ | ❌ | ✅ PostgreSQL |
+| **Load Balancer** | ❌ | ❌ | ✅ (if >1 VM) | ❌ |
+| **Public IPs** | ❌ | ✅ | ✅ (optional) | ✅ (optional) |
+| **Cloud-init** | ❌ | ✅ | ✅ | ✅ |
+| **Auto-mount** | ❌ | ✅ | ✅ | ✅ |
 
 ## Common Variables
 
@@ -125,6 +140,9 @@ Each template provides relevant outputs:
 
 ### Multi-Linux VMs
 - `vm_ids[]`, `vm_public_ips[]`, `load_balancer_ip`, `ssh_commands[]`
+
+### PostgreSQL VM with ANF
+- `vm_id`, `vm_public_ip`, `ssh_command`, `postgresql_connection_string`, `psql_command`
 
 ## Customization
 

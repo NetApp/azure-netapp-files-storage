@@ -1,18 +1,19 @@
 # Example Terraform Variables File
-# Copy this to terraform.tfvars and customize
+# Copy this to terraform.tfvars and customize with your values
+# DO NOT use these example passwords in production!
 
 # VM Configuration
 vm_name          = "postgresql-vm"
 admin_username   = "azureuser"
-admin_password   = "YourVMAdminPassword123!"  # Change this!
+admin_password   = "CHANGE-ME-SecurePassword123!"  # REQUIRED: Set strong password
 vm_size          = "Standard_D2s_v3"
 
 # PostgreSQL Configuration
 postgresql_version        = "15"  # 14, 15, or 16
-postgresql_admin_password = "PostgresAdminPassword123!"  # Change this!
+postgresql_admin_password = "CHANGE-ME-PostgresAdmin123!"  # REQUIRED: Set strong password
 database_name             = "mydb"
 database_user             = "appuser"
-database_password         = "DatabaseUserPassword123!"  # Change this!
+database_password         = "CHANGE-ME-DatabaseUser123!"  # REQUIRED: Set strong password
 postgresql_port           = 5432
 
 # Network Configuration
